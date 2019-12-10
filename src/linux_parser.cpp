@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "linux_parser.h"
 
@@ -35,13 +36,13 @@ string LinuxParser::OperatingSystem() {
 
 // DONE: An example of how to read data from the filesystem
 string LinuxParser::Kernel() {
-  string os, kernel;
+  string os, kernel, version;
   string line;
   std::ifstream stream(kProcDirectory + kVersionFilename);
   if (stream.is_open()) {
     std::getline(stream, line);
     std::istringstream linestream(line);
-    linestream >> os >> kernel;
+    linestream >> os >> version >> kernel;
   }
   return kernel;
 }
@@ -67,7 +68,35 @@ vector<int> LinuxParser::Pids() {
 }
 
 // TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { return 0.0; }
+float LinuxParser::MemoryUtilization() { 
+  string line, memTotal, memFree, buffers, cached, op, value;
+  std::ifstream stream(kProcDirectory + kMeminfoFilename);
+  if (stream.is_open()) {
+      while(std::getline(stream, line)){
+      std::istringstream linestream(line);
+      linestream >> op >> value;
+      if("MemTotal:" == op){
+        memTotal = value;
+      }else if("MemFree:" == op){
+        memFree = value;
+      }else if("Buffers:" == op){
+        buffers = value;
+      }else if("Cached:" == op){
+        cached = value;
+      }
+    }
+  }
+  long int memTotalInt = atoi(memTotal.c_str());
+  long int memFreeInt = atoi(memFree.c_str());
+  long int buffersInt = atoi(buffers.c_str());
+  long int cachedInt = atoi(cached.c_str());
+  long int memUsed = memTotalInt - memFreeInt - buffersInt - cachedInt;
+  // std::cout<<"total:"<<memTotal;
+  // std::cout<<"free:"<<memFree;
+  // std::cout<<"buffers:"<<buffers;
+  // std::cout<<"cached:"<<cached;
+  return float(memUsed)/float(memTotalInt);
+}
 
 // TODO: Read and return the system uptime
 long LinuxParser::UpTime() { return 0; }
