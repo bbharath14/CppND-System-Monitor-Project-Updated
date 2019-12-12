@@ -4,5 +4,5 @@
 int main() {
   System system;
   NCursesDisplay::Display(system);
-  //system.MemoryUtilization();
+  //system.UpTime();
 }
