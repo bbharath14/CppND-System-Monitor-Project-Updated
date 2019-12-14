@@ -15,6 +15,6 @@ string Format::ElapsedTime(long seconds) {
     std::string t ="";
     t+=std::to_string(p->tm_hour)+":";
     t+=std::to_string(p->tm_min)+":";
-    t+=std::to_string((int)floor(p->tm_sec));
+    t+=std::to_string((int)roundf(p->tm_sec*100)/100);
     return t;
 }

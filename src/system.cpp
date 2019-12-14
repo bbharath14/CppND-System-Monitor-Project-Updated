@@ -5,8 +5,6 @@
 #include <vector>
 #include<iostream>
 
-#include "process.h"
-#include "processor.h"
 #include "system.h"
 
 using std::set;
@@ -15,13 +13,17 @@ using std::string;
 using std::vector;
 
 // TODO: Return the system's CPU
-Processor& System::Cpu() { return cpu_; }
+Processor& System::Cpu() { 
+    cpu_ = Processor();
+    return cpu_;
+}
 
 // TODO: Return a container composed of the system's processes
 vector<Process>& System::Processes() { 
     for(auto pid:LinuxParser::Pids()){
         Process p(pid);
         processes_.push_back(p);
+        //p.CpuUtilization();
     }
     std::sort(processes_.begin(), processes_.end());
     return processes_;
