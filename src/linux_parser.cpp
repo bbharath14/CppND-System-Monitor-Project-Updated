@@ -126,20 +126,35 @@ long LinuxParser::ActiveJiffies() { return 0; }
 long LinuxParser::IdleJiffies() { return 0; }
 
 // TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+vector<string> LinuxParser::CpuUtilization() {
+
+ }
 
 // TODO: Read and return the total number of processes
-int LinuxParser::TotalProcesses() { return LinuxParser::Pids().size(); }
+int LinuxParser::TotalProcesses() { 
+  std::ifstream stream(kProcDirectory + kStatFilename);
+  std::string op1,val,line;
+  if (stream.is_open()) {
+    while(std::getline(stream, line)){
+      std::istringstream linestream(line);
+      if(line.find("processes")!=std::string::npos){
+        linestream >> op1 >> val;
+        break;
+      }
+    }
+  }
+  return atoi(val.c_str());
+}
 
 // TODO: Read and return the number of running processes
 int LinuxParser::RunningProcesses() {
   std::ifstream stream(kProcDirectory + kStatFilename);
-  std::string op1,op2,val,line;
+  std::string op1,val,line;
   if (stream.is_open()) {
     while(std::getline(stream, line)){
       std::istringstream linestream(line);
-      if(line.find("procs running")!=std::string::npos){
-        linestream >> op1 >> op2 >> val;
+      if(line.find("running")!=std::string::npos && line.find("procs")!=std::string::npos){
+        linestream >> op1 >> val;
         break;
       }
     }
@@ -149,20 +164,79 @@ int LinuxParser::RunningProcesses() {
 
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Command(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Command(int pid) { 
+  std::ifstream stream(kProcDirectory + std::to_string(pid) + "/" + kCmdlineFilename);
+    std::string cmd;
+    if(stream.is_open()){
+        std::getline(stream, cmd);
+    }
+  return cmd;
+}
 
 // TODO: Read and return the memory used by a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Ram(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Ram(int pid) {
+   std::ifstream stream(kProcDirectory + std::to_string(pid) + "/" + kStatusFilename);
+   std::string op,val, line;
+   if(stream.is_open()){
+     while(std::getline(stream, line)){
+       if(line.find("VmSize:")!=std::string::npos){
+          std::istringstream linestream(line);
+          linestream >> op >> val;
+          break;
+        }
+     }
+   }
+   return std::to_string(atoi(val.c_str())/1000);
+}
 
 // TODO: Read and return the user ID associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Uid(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Uid(int pid) {
+  std::ifstream stream(kProcDirectory + std::to_string(pid) + "/" + kStatFilename);
+  std::string op,val,line,res;
+  if (stream.is_open()) {
+    while(std::getline(stream, line)){
+        if(line.find("Uid:")!=std::string::npos){
+            std::istringstream linestream(line);
+            linestream>>op>>val;
+        }
+    }
+  }
+  return val;
+}
 
 // TODO: Read and return the user associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::User(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::User(int pid) {
+   std::ifstream stream1(kPasswordPath);
+   std::string line, res;
+  if(stream1.is_open()){
+      while(std::getline(stream1, line)){
+          if(line.find(Uid(pid) +":"+ Uid(pid))!=std::string::npos){
+              std::replace(line.begin(), line.end(), ':', ' ');
+              std::istringstream linestream1(line);
+              linestream1>>res;
+              break;
+          }
+      }
+  }
+  return res;
+}
 
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::UpTime(int pid[[maybe_unused]]) { return 0; }
+long LinuxParser::UpTime(int pid) {
+   std::ifstream stream(kProcDirectory + std::to_string(pid) + "/" + kStatFilename);
+    int c=0;
+    std::string line,word;
+    if(stream.is_open()){
+        std::getline(stream,line);
+        std::istringstream linestream(line);
+        while(c!=22){
+            linestream >> word;
+            c++;
+        }
+    }
+    return atoi(word.c_str());
+}
